@@ -16,7 +16,6 @@ jupyter:
 # Chapter 2: Small Worlds and Large Worlds
 
 ```python
-%%capture
 import numpy as np
 import scipy.stats as stats
 import matplotlib.pyplot as plt
@@ -25,6 +24,9 @@ import pymc3 as pm
 import arviz as az
 
 from unthinking import *
+
+np.random.seed(42)
+random_state = np.random.RandomState(42)
 ```
 
 ## Code
@@ -40,7 +42,7 @@ ways / sum(ways)
 ### 2.2
 
 ```python
-stats.binom.pmf(6, 9, .5)
+stats.binom.pmf(6, 9, 0.5)
 ```
 
 ### 2.3
@@ -65,33 +67,43 @@ posterior = unstd_posterior / sum(unstd_posterior)
 ### 2.4
 
 ```python
-plot(x=p_grid, y=posterior, marker='o',
-     xlabel='probability of water', ylabel='posterior probability')
-plt.show()
+ax = plot(
+    x=p_grid,
+    y=posterior,
+    marker="o",
+    xlabel="probability of water",
+    ylabel="posterior probability",
+)
 ```
 
 ```python
 def plot_posterior(w, l, num_points, prior_fn, ax=None, title=None):
     p_grid = np.linspace(0, 1, num_points)
     prior = np.vectorize(prior_fn)(p_grid)
-    
+
     likelihood = stats.binom.pmf(w, w + l, p_grid)
     unstd_posterior = likelihood * prior
     posterior = unstd_posterior / sum(unstd_posterior)
-    
-    plot(x=p_grid, y=posterior, marker='o', ax=ax, 
-         xlabel='probability of water', ylabel='posterior probability',title=title)
 
-    
+    plot(
+        x=p_grid,
+        y=posterior,
+        marker="o",
+        ax=ax,
+        xlabel="probability of water",
+        ylabel="posterior probability",
+        title=title,
+    )
+
+
 fig, axes = plt.subplots(1, 3, figsize=(12, 4))
 
 uninformative_prior = lambda x: 1
-plot_posterior(6, 3, 5, uninformative_prior, ax=axes[0], title='5 points')
-plot_posterior(6, 3, 20, uninformative_prior, ax=axes[1], title='20 points')
-plot_posterior(6, 3, 100, uninformative_prior, axes[2], '100 points')
+plot_posterior(6, 3, 5, uninformative_prior, ax=axes[0], title="5 points")
+plot_posterior(6, 3, 20, uninformative_prior, ax=axes[1], title="20 points")
+plot_posterior(6, 3, 100, uninformative_prior, axes[2], "100 points")
 
 fig.tight_layout()
-plt.show()
 ```
 
 <!-- #region tags=[] -->
@@ -100,11 +112,11 @@ plt.show()
 
 ```python tags=[]
 abundant_water_prior = lambda x: 0 if x < 0.5 else 1
-laplace_prior = lambda x: np.exp(-5*np.abs(x - 0.5))
+laplace_prior = lambda x: np.exp(-5 * np.abs(x - 0.5))
 
-fig, axes = plt.subplots(1, 2, figsize=(12,4))
-plot_posterior(6, 3, 50, abundant_water_prior, axes[0], 'p > 0.5 prior')
-plot_posterior(6, 3, 50, laplace_prior, axes[1], 'Laplace prior')
+fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+plot_posterior(6, 3, 50, abundant_water_prior, axes[0], "p > 0.5 prior")
+plot_posterior(6, 3, 50, laplace_prior, axes[1], "Laplace prior")
 ```
 
 <!-- #region tags=[] -->
@@ -112,32 +124,28 @@ plot_posterior(6, 3, 50, laplace_prior, axes[1], 'Laplace prior')
 <!-- #endregion -->
 
 ```python tags=[]
-with pm.Model() as normal_aproximation:
-    p = pm.Uniform('p', 0, 1)
-    w = pm.Binomial('w', n=9, p=p, observed=6)
-    globe_qa = quap()
-precis(globe_qa)
+with pm.Model() as model:
+    p = pm.Uniform("p", 0, 1)
+    w = pm.Binomial("w", n=9, p=p, observed=6)
+    quap_result = quap()
+precis(quap_result)
 ```
 
 ### 2.7
 
 ```python
+ax = plt.gca()
+ax.set(xlabel="probability of water", ylabel="density")
+
 # analytical calculation
 w = 6
 l = 3
-
-x = np.linspace(0, 1, 100)
-ax = plt.gca()
-
-curve(lambda x: stats.beta.pdf(x, w+1, l+1), start=0, end=1, ax=ax)
+curve(lambda x: stats.beta.pdf(x, w + 1, l + 1), start=0, end=1, ax=ax, label="exact solution")
 
 # quadratic approximation
-curve(lambda x: stats.norm.pdf(x, 0.67, 0.16), start=0, end=1, ax=ax)
+curve(lambda x: stats.norm.pdf(x, 0.67, 0.16), start=0, end=1, ax=ax, label="quadratic approximation")
 
-plt.legend(['exact solution', 'quadratic approximation'], loc='upper left')
-ax.set(xlabel='probability of water', ylabel='density')
-
-plt.show()
+legend = plt.legend(loc="upper left")
 ```
 
 ### 2.8
@@ -148,26 +156,25 @@ p = np.repeat(np.nan, n_samples)
 p[0] = 0.5
 w = 6
 l = 3
+
 for i in range(1, n_samples):
-    p_new = np.abs(stats.norm.rvs(p[i-1], 0.1))
+    p_new = np.abs(stats.norm.rvs(p[i - 1], 0.1, random_state=random_state))
     if p_new > 1:
         p_new = 2 - p_new
-    q0 = stats.binom.pmf(w, w + l, p[i-1])
+    q0 = stats.binom.pmf(w, w + l, p[i - 1])
     q1 = stats.binom.pmf(w, w + l, p_new)
-    p[i] = p_new if stats.uniform.rvs() < q1/q0 else p[i-1]
+    p[i] = p_new if stats.uniform.rvs(random_state=random_state) < q1 / q0 else p[i - 1]
 ```
 
 ### 2.9
 
 ```python
-ax = az.plot_kde(p)
-plt.plot(x, stats.beta.pdf(x, w+1, l+1), color='tab:orange')
-
-
-plt.legend(['MCMC', 'exact solution'], loc ='upper left')
-ax.set(xlabel='probability of water', ylabel='density')
-
-plt.show()
+ax = plt.gca()
+dens(p, ax=ax, xlabel="probability of water", ylabel="density", label="MCMC")
+curve(
+    lambda x: stats.beta.pdf(x, w + 1, l + 1), start=0, end=1, ax=ax, color="tab:orange", label="exact solution"
+)
+legend = plt.legend(loc="upper left")
 ```
 
 ## Practice
@@ -185,12 +192,12 @@ plt.show()
 
 ### 2E3.
 
-(1) and (4). (1) is immediate and (4) follows by applying Bayes' theorem.
+(1) and (4). (1) is immediate and (4) follows from applying Bayes' theorem.
 
 
 ### 2E4.
 
-To say that the probability of water is 0.7, is to say that 70% of the globe is covered with water from the perspective of our observer with limited knowledge.
+To say that the probability of water is 0.7 is to say that 70% of the globe is covered with water from the perspective of our observer with limited knowledge.
 
 
 ### 2M1.
@@ -198,12 +205,11 @@ To say that the probability of water is 0.7, is to say that 70% of the globe is 
 ```python
 fig, axes = plt.subplots(1, 3, figsize=(12, 4))
 
-plot_posterior(3, 0, 40, uninformative_prior, axes[0], 'W, W, W')
-plot_posterior(3, 1, 40, uninformative_prior, axes[1], 'W, W, W, L')
-plot_posterior(5, 2, 40, uninformative_prior, axes[2], 'L, W, W, L, W, W, W')
+plot_posterior(3, 0, 40, uninformative_prior, axes[0], "W, W, W")
+plot_posterior(3, 1, 40, uninformative_prior, axes[1], "W, W, W, L")
+plot_posterior(5, 2, 40, uninformative_prior, axes[2], "L, W, W, L, W, W, W")
 
 fig.tight_layout()
-plt.show()
 ```
 
 ### 2M2.
@@ -211,12 +217,11 @@ plt.show()
 ```python
 fig, axes = plt.subplots(1, 3, figsize=(12, 4))
 
-plot_posterior(3, 0, 40, abundant_water_prior, axes[0], 'W, W, W')
-plot_posterior(3, 1, 40, abundant_water_prior, axes[1], 'W, W, W, L')
-plot_posterior(5, 2, 40, abundant_water_prior, axes[2], 'L, W, W, L, W, W, W')
+plot_posterior(3, 0, 40, abundant_water_prior, axes[0], "W, W, W")
+plot_posterior(3, 1, 40, abundant_water_prior, axes[1], "W, W, W, L")
+plot_posterior(5, 2, 40, abundant_water_prior, axes[2], "L, W, W, L, W, W, W")
 
 fig.tight_layout()
-plt.show()
 ```
 
 ### 2M3.
@@ -248,7 +253,7 @@ Therefore $P(\text{B/B}|\text{B}) = 4/5$.
 Since a black side is showing, we could not have drawn the W/W card. There are two ways we have drawn the B/W card, and for each there is only one way we could be showing a black side, whereas there is only one way we could have drawn a B/B card, but two ways to be showing a black side, since there are two black sides. 
 
 Therefore 
-$P(\text{B/B}|\text{B}) = \frac{1}{2}$.
+$P(\text{B/B}|\text{B}) = 1/2$.
 <!-- #endregion -->
 
 ### 2M7.
@@ -259,7 +264,7 @@ If we have first drawn the B/W card, we could have done so only one way, with th
 
 If instead we have drawn the B/B card, we could have done so two ways (either side up), and the next card we drew could either have been B/W (one way, white side up) or W/W (two ways, either side up).
 
-Therefore $P$(B/B|first card B, second card W) = 6/8 = 3/4.
+Therefore $P(\text{B/B}|\text{first card B, second card W}) = 6/8 = 3/4$.
 
 
 ### 2H1.

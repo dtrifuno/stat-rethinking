@@ -18,7 +18,6 @@ jupyter:
 <!-- #endregion -->
 
 ```python tags=[]
-%%capture
 import numpy as np
 import scipy.stats as stats
 import matplotlib.pyplot as plt
@@ -27,6 +26,9 @@ import pymc3 as pm
 import arviz as az
 
 from unthinking import *
+
+np.random.seed(42)
+random_state = np.random.RandomState(42)
 ```
 
 <!-- #region tags=[] -->
@@ -41,7 +43,7 @@ from unthinking import *
 p_positive_vampire = 0.95
 p_positive_mortal = 0.01
 p_vampire = 0.001
-p_positive = p_positive_vampire * p_vampire + p_positive_mortal * ( 1 - p_vampire )
+p_positive = p_positive_vampire * p_vampire + p_positive_mortal * (1 - p_vampire)
 p_vampire_positive = p_positive_vampire * p_vampire / p_positive
 p_vampire_positive
 ```
@@ -71,9 +73,15 @@ samples = np.random.choice(p_grid, p=posterior, size=10_000, replace=True)
 <!-- #endregion -->
 
 ```python tags=[]
-plot(x=range(0, len(samples)), y=samples, plot_fn=sns.scatterplot,
-     alpha=0.2, linewidth=0,
-     xlabel='sample number', ylabel='proportion water (p)')
+ax = plot(
+    x=range(0, len(samples)),
+    y=samples,
+    plot_fn=sns.scatterplot,
+    alpha=0.2,
+    linewidth=0,
+    xlabel="sample number",
+    ylabel="proportion water (p)",
+)
 ```
 
 <!-- #region tags=[] -->
@@ -81,7 +89,7 @@ plot(x=range(0, len(samples)), y=samples, plot_fn=sns.scatterplot,
 <!-- #endregion -->
 
 ```python tags=[]
-dens(samples, xlabel='proportion water (p)')
+ax = dens(samples, xlabel="proportion water (p)")
 ```
 
 <!-- #region tags=[] -->
@@ -143,7 +151,7 @@ samples = np.random.choice(p_grid, p=posterior, size=10_000, replace=True)
 <!-- #endregion -->
 
 ```python tags=[]
-np.quantile(samples, (0.25, 0.75))
+pi(samples, prob=0.5)
 ```
 
 <!-- #region tags=[] -->
@@ -151,7 +159,7 @@ np.quantile(samples, (0.25, 0.75))
 <!-- #endregion -->
 
 ```python tags=[]
-az.hdi(samples, hdi_prob=0.5)
+hdpi(samples, prob=0.5)
 ```
 
 <!-- #region tags=[] -->
@@ -215,7 +223,7 @@ stats.binom.pmf(range(0, 3), 2, p=0.7)
 <!-- #endregion -->
 
 ```python tags=[]
-stats.binom.rvs(2, p=0.7)
+stats.binom.rvs(2, p=0.7, random_state=random_state)
 ```
 
 <!-- #region tags=[] -->
@@ -223,7 +231,7 @@ stats.binom.rvs(2, p=0.7)
 <!-- #endregion -->
 
 ```python tags=[]
-stats.binom.rvs(2, p=0.7, size=10)
+stats.binom.rvs(2, p=0.7, size=10, random_state=random_state)
 ```
 
 <!-- #region tags=[] -->
@@ -231,7 +239,7 @@ stats.binom.rvs(2, p=0.7, size=10)
 <!-- #endregion -->
 
 ```python tags=[]
-np.bincount(stats.binom.rvs(2, p=0.7, size=10_000)) / 10_000
+np.bincount(stats.binom.rvs(2, p=0.7, size=10_000, random_state=random_state)) / 10_000
 ```
 
 <!-- #region tags=[] -->
@@ -239,10 +247,8 @@ np.bincount(stats.binom.rvs(2, p=0.7, size=10_000)) / 10_000
 <!-- #endregion -->
 
 ```python tags=[]
-dummy_w = stats.binom.rvs(9, p=0.7, size=10_000)
-ax = sns.histplot(dummy_w, discrete=True)
-ax.set(xlabel='dummy water count', ylabel='frequency')
-plt.show()
+dummy_w = stats.binom.rvs(9, p=0.7, size=10_000, random_state=random_state)
+ax = simplehist(dummy_w, xlabel="dummy water count")
 ```
 
 <!-- #region tags=[] -->
@@ -250,7 +256,7 @@ plt.show()
 <!-- #endregion -->
 
 ```python tags=[]
-w = stats.binom.rvs(9, p=0.6, size=10_000)
+w = stats.binom.rvs(9, p=0.6, size=10_000, random_state=random_state)
 ```
 
 <!-- #region tags=[] -->
@@ -258,7 +264,7 @@ w = stats.binom.rvs(9, p=0.6, size=10_000)
 <!-- #endregion -->
 
 ```python tags=[]
-w = stats.binom.rvs(9, p=samples)
+w = stats.binom.rvs(9, p=samples, random_state=random_state)
 ```
 
 <!-- #region tags=[] -->
@@ -271,8 +277,6 @@ prior = np.repeat(1, 1000)
 likelihood = stats.binom.pmf(6, 9, p_grid)
 posterior = likelihood * prior
 posterior = posterior / sum(posterior)
-
-np.random.seed(100)
 samples = np.random.choice(p_grid, p=posterior, size=10_000, replace=True)
 ```
 
@@ -281,14 +285,17 @@ samples = np.random.choice(p_grid, p=posterior, size=10_000, replace=True)
 <!-- #endregion -->
 
 ```python tags=[]
+# fmt: off
 birth1 = np.array([1,0,0,0,1,1,0,1,0,1,0,0,1,1,0,1,1,0,0,0,1,0,0,0,1,0,
 0,0,0,1,1,1,0,1,0,1,1,1,0,1,0,1,1,0,1,0,0,1,1,0,1,0,0,0,0,0,0,0,
 1,1,0,1,0,0,1,0,0,0,1,0,0,1,1,1,1,0,1,0,1,1,1,1,1,0,0,1,0,1,1,0,
 1,0,1,1,1,0,1,1,1,1])
-birth2  = np.array([0,1,0,1,0,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,0,0,1,1,1,0,
+
+birth2 = np.array([0,1,0,1,0,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,0,0,1,1,1,0,
 1,1,1,0,1,1,1,0,1,0,0,1,1,1,1,0,0,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,
 1,1,1,0,1,1,0,1,1,0,1,1,1,0,0,0,0,0,0,1,0,0,0,1,1,0,0,1,0,0,1,1,
 0,0,0,1,1,1,0,0,0,0])
+# fmt: on
 ```
 
 <!-- #region tags=[] -->
@@ -296,7 +303,7 @@ birth2  = np.array([0,1,0,1,0,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,0,0,1,1,1,0,
 <!-- #endregion -->
 
 ```python tags=[]
-pass
+# Execute cell 3.28 instead to load the data.
 ```
 
 <!-- #region tags=[] -->
@@ -356,7 +363,7 @@ np.percentile(samples, 100 - 20)
 <!-- #endregion -->
 
 ```python tags=[]
-az.hdi(samples, hdi_prob=0.66)
+hdpi(samples, prob=0.66)
 ```
 
 <!-- #region tags=[] -->
@@ -364,7 +371,7 @@ az.hdi(samples, hdi_prob=0.66)
 <!-- #endregion -->
 
 ```python tags=[]
-np.percentile(samples, (17, 83))
+pi(samples, prob=0.66)
 ```
 
 <!-- #region tags=[] -->
@@ -385,7 +392,7 @@ posterior = posterior / sum(posterior)
 
 ```python tags=[]
 samples = np.random.choice(p_grid, p=posterior, size=10_000, replace=True)
-az.hdi(samples, hdi_prob=0.9)
+hdpi(samples, prob=0.9)
 ```
 
 <!-- #region tags=[] -->
@@ -418,7 +425,7 @@ posterior = likelihood * prior
 posterior = posterior / sum(posterior)
 
 samples = np.random.choice(p_grid, p=posterior, size=10_000, replace=True)
-print(az.hdi(samples, hdi_prob=0.9))
+print(hdpi(samples, prob=0.9))
 
 w = stats.binom.rvs(15, p=samples)
 print(sum(w == 8) / len(w))
@@ -432,22 +439,23 @@ print(sum(w == 6) / len(w))
 <!-- #endregion -->
 
 ```python tags=[]
-true_p = 0.5 # expect n to be largest the closer true_p is to 0.5
+true_p = 0.5  # expect n to be largest the closer true_p is to 0.5
 
 n = 10
 while True:
-    data = stats.binom.rvs(n, true_p)
+    data = stats.binom.rvs(n, true_p, random_state=random_state)
     p_grid = np.linspace(0, 1, 1000)
     prior = np.repeat(1, 1000)
     likelihood = stats.binom.pmf(data, n, p_grid)
     posterior = likelihood * prior
     posterior = posterior / sum(posterior)
     samples = np.random.choice(p_grid, p=posterior, size=10_000, replace=True)
-    
-    interval = np.percentile(samples, (0.5, 99.5))
+
+    interval = pi(samples, 0.99)
     width = interval[1] - interval[0]
     if width < 0.05:
-        print(n, interval)
+        print(n)
+        print(interval)
         break
     n = int(n * 1.25)
 ```
@@ -475,7 +483,7 @@ p_grid[np.argmax(posterior)]
 ```python tags=[]
 samples = np.random.choice(p_grid, p=posterior, size=10_000, replace=True)
 for p in (0.50, 0.89, 0.97):
-    print("{}%: {}".format(100*p, az.hdi(samples, hdi_prob=p)))
+    print("{}\n".format(hdpi(samples, prob=p)))
 ```
 
 <!-- #region tags=[] -->
@@ -483,12 +491,11 @@ for p in (0.50, 0.89, 0.97):
 <!-- #endregion -->
 
 ```python tags=[]
-w = stats.binom.rvs(n, p=samples)
-ax = sns.histplot(w, discrete=True)
-plt.axvline(x=k, color='tab:red', linewidth=3)
-plt.legend(["actual", "predicted"], loc ="upper left")
-ax.set(xlabel='male births per 200', ylabel='frequency')
-plt.show()
+w = stats.binom.rvs(n, p=samples, random_state=random_state)
+
+plt.axvline(x=k, color="tab:red", linewidth=3)
+ax = simplehist(w, xlabel="male births per 200")
+legend = plt.legend(["actual", "predicted"], loc="upper left")
 ```
 
 The actual number of births is right in the middle of the histogram and appears to be a quite frequent outcome. Hence the model fits the data well.
@@ -498,15 +505,14 @@ The actual number of births is right in the middle of the histogram and appears 
 <!-- #endregion -->
 
 ```python tags=[]
-w = stats.binom.rvs(n // 2, p=samples)
-ax = sns.histplot(w, discrete=True)
-plt.axvline(x=sum(birth1), color='tab:red', linewidth=3)
-plt.legend(["actual", "predicted"], loc ="upper left")
-ax.set(xlabel='male births per 100', ylabel='frequency')
-plt.show()
+w = stats.binom.rvs(n // 2, p=samples, random_state=random_state)
+
+plt.axvline(x=sum(birth1), color="tab:red", linewidth=3)
+ax = simplehist(w, xlabel="male births per 100")
+legend = plt.legend(["actual", "predicted"], loc="upper left")
 ```
 
-The actual number of births is off center in the histogram and appears to be a moderately frequent outcome. The model fit no longer looks quite as good, but it is not clear that it is not appropriate either.
+The actual number of births is off center in the histogram, but still appears to be a fairly frequent outcome. The model fit no longer looks quite as strong, but it does not seem inappropriate either.
 
 <!-- #region tags=[] -->
 ### 3H5.
@@ -515,12 +521,10 @@ The actual number of births is off center in the histogram and appears to be a m
 ```python tags=[]
 born_after_girl = birth2[birth1 == 0]
 
-w = stats.binom.rvs(len(born_after_girl), p=samples)
-ax = sns.histplot(w, discrete=True)
-plt.axvline(x=sum(born_after_girl), color='tab:red', linewidth=3)
-plt.legend(["actual", "predicted"], loc ="upper left")
-ax.set(xlabel='male births per 100', ylabel='frequency')
-plt.show()
+w = stats.binom.rvs(len(born_after_girl), p=samples, random_state=random_state)
+plt.axvline(x=sum(born_after_girl), color="tab:red", linewidth=3)
+ax = simplehist(w, xlabel="male births per 100")
+legend = plt.legend(["actual", "predicted"], loc="upper left")
 ```
 
-The actual result corresponds to what seems to be a very unlikely event in the model, so it seems likely that our assumption that the sex of the first child does not influence the sex of the second child was incorrect.
+The actual result corresponds to what seems to be a very unlikely event in the model, so it seems probable that our assumption that the sex of the first child does not influence the sex of the second child was incorrect.

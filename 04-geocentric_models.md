@@ -26,6 +26,9 @@ import pymc3 as pm
 import arviz as az
 
 from unthinking import *
+
+np.random.seed(42)
+random_state = np.random.RandomState(42)
 ```
 
 ## Code
@@ -34,43 +37,68 @@ from unthinking import *
 ### 4.1
 
 ```python
-pos = stats.uniform.rvs(-1, 1, size=(1000, 16)).sum(axis=1)
-dens(pos, xlabel='distance from start')
+pos = stats.uniform.rvs(-1, 1, size=(1000, 16), random_state=random_state).sum(axis=1)
+ax = dens(pos, xlabel="distance from start")
 ```
 
 ### 4.2
 
 ```python
-(1 + stats.uniform.rvs(0, 0.1, size=12)).prod()
+(1 + stats.uniform.rvs(0, 0.1, size=12, random_state=random_state)).prod()
 ```
 
 ### 4.3
 
 ```python
-growth = (1 + stats.uniform.rvs(0, 0.1, size=(1000, 12))).prod(axis=1)
-dens(growth, xlabel='proportional growth', norm_comp=True)
+growth = (
+    1 + stats.uniform.rvs(0, 0.1, size=(1000, 12), random_state=random_state)
+).prod(axis=1)
+ax = dens(growth, xlabel="proportional growth", norm_comp=True)
 ```
 
 ### 4.4
 
 ```python
-small = (1 + stats.uniform.rvs(0, 0.01, size=(1000, 12))).prod(axis=1)
-big = (1 + stats.uniform.rvs(0, 0.5, size=(1000, 12))).prod(axis=1)
+small = (
+    1 + stats.uniform.rvs(0, 0.01, size=(1000, 12), random_state=random_state)
+).prod(axis=1)
+big = (1 + stats.uniform.rvs(0, 0.5, size=(1000, 12), random_state=random_state)).prod(
+    axis=1
+)
 
 fig, axes = plt.subplots(1, 2, figsize=(12, 4))
-dens(small, ax=axes[0], norm_comp=True,
-     xlabel='proportional growth', title='small growth effects')
-dens(big, ax=axes[1], norm_comp=True,
-     xlabel='proportional growth', title='large growth effects')
-plt.show()
+dens(
+    small,
+    ax=axes[0],
+    norm_comp=True,
+    xlabel="proportional growth",
+    title="small growth effects",
+)
+dens(
+    big,
+    ax=axes[1],
+    norm_comp=True,
+    xlabel="proportional growth",
+    title="large growth effects",
+)
+fig.tight_layout()
 ```
 
 ### 4.5
 
 ```python
-log_big = np.log((1 + stats.uniform.rvs(0, 0.5, size=(1000, 12))).prod(axis=1))
+log_big = np.log(
+    (1 + stats.uniform.rvs(0, 0.5, size=(1000, 12), random_state=random_state)).prod(
+        axis=1
+    )
+)
 
-dens(log_big, xlabel='log proportional growth', title='log growth effects')
+ax = dens(
+    log_big,
+    xlabel="log proportional growth",
+    title="log growth effects",
+    norm_comp=True,
+)
 ```
 
 ### 4.6
@@ -82,14 +110,13 @@ p_grid = np.linspace(0, 1, 100)
 posterior = stats.binom.pmf(w, n, p_grid) * stats.uniform.pdf(p_grid, 0, 1)
 posterior = posterior / sum(posterior)
 
-plot(x=p_grid, y=posterior, xlabel='probability of water', ylabel='density')
-plt.show()
+ax = plot(x=p_grid, y=posterior, xlabel="probability of water", ylabel="density")
 ```
 
 ### 4.7
 
 ```python
-df = pd.read_csv('data/Howell1.csv',sep=';')
+df = pd.read_csv("data/Howell1.csv", sep=";")
 ```
 
 ### 4.8
@@ -101,8 +128,7 @@ df
 ### 4.9
 
 ```python
-df.hist()
-df.describe(percentiles=(0.055, 0.945))
+precis(df)
 ```
 
 <!-- #region tags=[] -->
@@ -110,7 +136,7 @@ df.describe(percentiles=(0.055, 0.945))
 <!-- #endregion -->
 
 ```python tags=[]
-df['height']
+df["height"]
 ```
 
 <!-- #region tags=[] -->
@@ -118,11 +144,11 @@ df['height']
 <!-- #endregion -->
 
 ```python tags=[]
-df2 = df[df['age'] >= 18]
+df2 = df[df["age"] >= 18]
 ```
 
 ```python tags=[]
-ax = dens(df2['height'], xlabel='height')
+ax = dens(df2["height"], xlabel="height")
 ```
 
 <!-- #region tags=[] -->
@@ -131,7 +157,7 @@ ax = dens(df2['height'], xlabel='height')
 
 ```python tags=[]
 pdf = lambda x: stats.norm.pdf(x, 178, 20)
-ax = curve(pdf, start=100, end=250, xlabel='mu', ylabel='density')
+ax = curve(pdf, start=100, end=250, xlabel="mu", ylabel="density")
 ```
 
 <!-- #region tags=[] -->
@@ -140,7 +166,7 @@ ax = curve(pdf, start=100, end=250, xlabel='mu', ylabel='density')
 
 ```python tags=[]
 pdf = lambda x: stats.uniform.pdf(x, 0, 50)
-ax = curve(pdf, start=-10, end=60, xlabel='sigma', ylabel='density')
+ax = curve(pdf, start=-10, end=60, xlabel="sigma", ylabel="density")
 ```
 
 <!-- #region tags=[] -->
@@ -153,7 +179,7 @@ sample_mu = stats.norm.rvs(178, 20, n)
 sample_sigma = stats.uniform.rvs(0, 50, n)
 prior_h = stats.norm.rvs(sample_mu, sample_sigma)
 
-ax = dens(prior_h, xlabel='height')
+ax = dens(prior_h, xlabel="height")
 ```
 
 <!-- #region tags=[] -->
@@ -163,9 +189,7 @@ ax = dens(prior_h, xlabel='height')
 ```python tags=[]
 sample_mu = stats.norm.rvs(178, 100, n)
 prior_h = stats.norm.rvs(sample_mu, sample_sigma)
-ax = az.plot_kde(prior_h)
-ax.set(xlabel='height (cm)', ylabel='density')
-plt.show()
+ax = dens(prior_h, xlabel="height")
 ```
 
 <!-- #region tags=[] -->
@@ -180,9 +204,15 @@ post_ll = np.zeros(post_mu.shape)
 
 for i in range(len(mu)):
     for j in range(len(sigma)):
-        post_ll[i, j] = np.sum(stats.norm.logpdf(df2['height'], post_mu[i, j], post_sigma[i, j]))
+        post_ll[i, j] = np.sum(
+            stats.norm.logpdf(df2["height"], post_mu[i, j], post_sigma[i, j])
+        )
 
-post_prod = post_ll + stats.norm.logpdf(post_mu, 178, 20) + stats.uniform.logpdf(post_sigma, 0, 50)
+post_prod = (
+    post_ll
+    + stats.norm.logpdf(post_mu, 178, 20)
+    + stats.uniform.logpdf(post_sigma, 0, 50)
+)
 post_prob = np.exp(post_prod - np.max(post_prod))
 ```
 
@@ -191,8 +221,7 @@ post_prob = np.exp(post_prod - np.max(post_prod))
 <!-- #endregion -->
 
 ```python tags=[]
-h = plt.contourf(post_mu, post_sigma, post_prob, levels=7)
-plt.show()
+cs = plt.contourf(post_mu, post_sigma, post_prob, levels=7)
 ```
 
 <!-- #region tags=[] -->
@@ -200,8 +229,7 @@ plt.show()
 <!-- #endregion -->
 
 ```python tags=[]
-plt.pcolormesh(post_mu, post_sigma, post_prob, shading='auto')
-plt.show()
+qm = plt.pcolormesh(post_mu, post_sigma, post_prob, shading="auto")
 ```
 
 <!-- #region tags=[] -->
@@ -225,9 +253,15 @@ sample_sigma = flat_sigma[sample_i]
 <!-- #endregion -->
 
 ```python tags=[]
-ax = sns.scatterplot(x=sample_mu, y=sample_sigma, alpha=0.3, s=5)
-ax.set(xlabel='mu', ylabel='sigma')
-plt.show()
+ax = plot(
+    x=sample_mu,
+    y=sample_sigma,
+    plot_fn=sns.scatterplot,
+    alpha=0.3,
+    s=5,
+    xlabel="mu",
+    ylabel="sigma",
+)
 ```
 
 <!-- #region tags=[] -->
@@ -237,13 +271,10 @@ plt.show()
 ```python tags=[]
 fig, axes = plt.subplots(1, 2, figsize=(12, 4))
 
-az.plot_kde(sample_mu, ax=axes[0])
-axes[0].set(xlabel='mu', ylabel='density')
-az.plot_kde(sample_sigma, ax=axes[1])
-axes[1].set(xlabel='sigma', ylabel='density')
+dens(sample_mu, ax=axes[0], xlabel="mu")
+dens(sample_sigma, ax=axes[1], xlabel="sigma")
 
 fig.tight_layout()
-plt.show()
 ```
 
 <!-- #region tags=[] -->
@@ -251,7 +282,7 @@ plt.show()
 <!-- #endregion -->
 
 ```python tags=[]
-az.hdi(sample_mu, hdi_prob=0.94), az.hdi(sample_sigma, hdi_prob=0.94)
+hdpi(sample_mu, prob=0.94), hdpi(sample_sigma, prob=0.94)
 ```
 
 <!-- #region tags=[] -->
@@ -259,7 +290,7 @@ az.hdi(sample_mu, hdi_prob=0.94), az.hdi(sample_sigma, hdi_prob=0.94)
 <!-- #endregion -->
 
 ```python tags=[]
-df3 = df2.sample(20)
+df3 = df2.sample(20, random_state=random_state)
 ```
 
 <!-- #region tags=[] -->
@@ -272,9 +303,15 @@ post2_ll = np.zeros(post2_mu.shape)
 
 for i in range(len(mu)):
     for j in range(len(sigma)):
-        post2_ll[i, j] = np.sum(stats.norm.logpdf(df3['height'], post2_mu[i, j], post2_sigma[i, j]))
+        post2_ll[i, j] = np.sum(
+            stats.norm.logpdf(df3["height"], post2_mu[i, j], post2_sigma[i, j])
+        )
 
-post2_prod = post2_ll + stats.norm.logpdf(post2_mu, 178, 20) + stats.uniform.logpdf(post2_sigma, 0, 50)
+post2_prod = (
+    post2_ll
+    + stats.norm.logpdf(post2_mu, 178, 20)
+    + stats.uniform.logpdf(post2_sigma, 0, 50)
+)
 post2_prob = np.exp(post2_prod - np.max(post2_prod))
 
 flat2_mu = post2_mu.reshape(-1)
@@ -286,9 +323,15 @@ sample2_i = np.random.choice(len(p2), size=n, p=p2)
 sample2_mu = flat2_mu[sample2_i]
 sample2_sigma = flat2_sigma[sample2_i]
 
-ax = sns.scatterplot(x=sample2_mu, y=sample2_sigma, alpha=0.3, s=5)
-ax.set(xlabel='mu', ylabel='sigma')
-plt.show()
+ax = plot(
+    x=sample2_mu,
+    y=sample2_sigma,
+    plot_fn=sns.scatterplot,
+    alpha=0.3,
+    s=5,
+    xlabel="mu",
+    ylabel="sigma",
+)
 ```
 
 <!-- #region tags=[] -->
@@ -296,9 +339,7 @@ plt.show()
 <!-- #endregion -->
 
 ```python tags=[]
-ax = az.plot_kde(sample2_sigma)
-ax.set(xlabel='sigma', ylabel='density')
-plt.show()
+ax = dens(sample2_sigma, xlabel="sigma", norm_comp=True)
 ```
 
 <!-- #region tags=[] -->
@@ -306,8 +347,8 @@ plt.show()
 <!-- #endregion -->
 
 ```python tags=[]
-df = pd.read_csv('data/Howell1.csv',sep=';')
-df2 = df[df['age'] >= 18]
+df = pd.read_csv("data/Howell1.csv", sep=";")
+df2 = df[df["age"] >= 18]
 ```
 
 <!-- #region tags=[] -->
@@ -316,9 +357,9 @@ df2 = df[df['age'] >= 18]
 
 ```python tags=[]
 with pm.Model() as model:
-    mu = pm.Normal('mu', mu=178, sigma=20)
-    sigma = pm.Uniform('sigma', 0, 50)
-    height = pm.Normal('height', mu=mu, sigma=sigma, observed=df2['height'])
+    mu = pm.Normal("mu", mu=178, sigma=20)
+    sigma = pm.Uniform("sigma", 0, 50)
+    height = pm.Normal("height", mu=mu, sigma=sigma, observed=df2["height"])
     result = quap()
 ```
 
@@ -336,10 +377,10 @@ precis(result)
 
 ```python tags=[]
 with pm.Model() as model:
-    mu = pm.Normal('mu', mu=178, sigma=20)
-    sigma = pm.Uniform('sigma', 0, 50)
-    height = pm.Normal('height', mu=mu, sigma=sigma, observed=df2['height'])
-    precis(quap(start={'mu': df2['height'].mean(), 'sigma': df2['height'].std()}))
+    mu = pm.Normal("mu", mu=178, sigma=20)
+    sigma = pm.Uniform("sigma", 0, 50)
+    height = pm.Normal("height", mu=mu, sigma=sigma, observed=df2["height"])
+    precis(quap(start={"mu": df2["height"].mean(), "sigma": df2["height"].std()}))
 ```
 
 <!-- #region tags=[] -->
@@ -348,9 +389,9 @@ with pm.Model() as model:
 
 ```python tags=[]
 with pm.Model() as model:
-    mu = pm.Normal('mu', mu=178, sigma=0.1)
-    sigma = pm.Uniform('sigma', 0, 50)
-    height = pm.Normal('height', mu=mu, sigma=sigma, observed=df2['height'])
+    mu = pm.Normal("mu", mu=178, sigma=0.1)
+    sigma = pm.Uniform("sigma", 0, 50)
+    height = pm.Normal("height", mu=mu, sigma=sigma, observed=df2["height"])
     precis(quap())
 ```
 
@@ -376,7 +417,7 @@ np.diag(cov), cov_to_cor(cov)
 <!-- #endregion -->
 
 ```python tags=[]
-post = extract_samples(result, 10_000)
+post = extract_samples(result, 10_000, random_state=random_state)
 post.head()
 ```
 
@@ -385,8 +426,7 @@ post.head()
 <!-- #endregion -->
 
 ```python tags=[]
-post.hist()
-post.describe(percentiles=(0.055, 0.945))
+precis(post)
 ```
 
 <!-- #region tags=[] -->
@@ -394,7 +434,9 @@ post.describe(percentiles=(0.055, 0.945))
 <!-- #endregion -->
 
 ```python tags=[]
-post = stats.multivariate_normal.rvs(mean=result.mean, cov=result.cov, size=10_000)
+post = stats.multivariate_normal.rvs(
+    mean=result.mean, cov=result.cov, size=10_000, random_state=random_state
+)
 ```
 
 <!-- #region tags=[] -->
@@ -402,9 +444,9 @@ post = stats.multivariate_normal.rvs(mean=result.mean, cov=result.cov, size=10_0
 <!-- #endregion -->
 
 ```python tags=[]
-df = pd.read_csv('data/Howell1.csv',sep=';')
-df2 = df[df['age'] >= 18]
-ax = sns.scatterplot(data=df2, y='height', x='weight')
+df = pd.read_csv("data/Howell1.csv", sep=";")
+df2 = df[df["age"] >= 18]
+ax = plot(data=df2, y="height", x="weight", plot_fn=sns.scatterplot)
 ```
 
 <!-- #region tags=[] -->
@@ -423,21 +465,20 @@ b = stats.norm.rvs(0, 10, size=n, random_state=random_state)
 <!-- #endregion -->
 
 ```python tags=[]
-xmin = df2['weight'].min()
-xmax = df2['weight'].max()
+xmin = df2["weight"].min()
+xmax = df2["weight"].max()
 
 xs = np.linspace(xmin, xmax, 100)
-xbar = df2['weight'].mean()
+xbar = df2["weight"].mean()
 
 ax = plt.gca()
-ax.axhline(y=0, linewidth=1, linestyle='dashed')
+ax.set(title="b ~ N(0, 10)", xlabel="weight", ylabel="height")
+ax.axhline(y=0, linewidth=1, linestyle="dashed")
 ax.axhline(y=272, linewidth=1)
 
 for alpha, beta in zip(a, b):
-    ys = alpha + beta*(xs - xbar)
-    sns.lineplot(x=xs, y=ys, color='black', linewidth=1, alpha=0.2, ax=ax)
-ax.set(title='b ~ N(0, 10)', xlabel='weight', ylabel='height')
-plt.show()
+    ys = alpha + beta * (xs - xbar)
+    plot(x=xs, y=ys, plot_fn=sns.lineplot, color="black", linewidth=1, alpha=0.2, ax=ax)
 ```
 
 <!-- #region tags=[] -->
@@ -445,9 +486,8 @@ plt.show()
 <!-- #endregion -->
 
 ```python tags=[]
-b = stats.lognorm.rvs(1, size=10_000)
-az.plot_kde(b[b < 5])
-plt.show()
+b = stats.lognorm.rvs(1, size=10_000, random_state=random_state)
+ax = dens(b[b < 5], xlabel="b")
 ```
 
 <!-- #region tags=[] -->
@@ -455,28 +495,31 @@ plt.show()
 <!-- #endregion -->
 
 ```python tags=[]
-random_state = np.random.RandomState(2971)
 n = 100
 a = stats.norm.rvs(178, 20, size=n, random_state=random_state)
 b = stats.lognorm.rvs(1, size=n, random_state=random_state)
 ```
 
 ```python tags=[]
-xmin = df2['weight'].min()
-xmax = df2['weight'].max()
-
-xs = np.linspace(xmin, xmax, 100)
-xbar = df2['weight'].mean()
+xmin = df2["weight"].min()
+xmax = df2["weight"].max()
+xbar = df2["weight"].mean()
 
 ax = plt.gca()
-ax.axhline(y=0, linewidth=1, linestyle='dashed')
+ax.set(title="log(b) ~ N(0, 1)", xlabel="weight", ylabel="height")
+ax.axhline(y=0, linewidth=1, linestyle="dashed")
 ax.axhline(y=272, linewidth=1)
 
 for alpha, beta in zip(a, b):
-    ys = alpha + beta*(xs - xbar)
-    sns.lineplot(x=xs, y=ys, color='black', linewidth=1, alpha=0.2, ax=ax)
-ax.set(title='log(b) ~ N(0, 1)', xlabel='weight', ylabel='height')
-plt.show()
+    curve(
+        lambda x: alpha + beta * (x - xbar),
+        start=xmin,
+        end=xmax,
+        color="black",
+        linewidth=1,
+        alpha=0.2,
+        ax=ax,
+    )
 ```
 
 <!-- #region tags=[] -->
@@ -484,17 +527,19 @@ plt.show()
 <!-- #endregion -->
 
 ```python tags=[]
-df = pd.read_csv('data/Howell1.csv',sep=';')
-df2 = df[df['age'] >= 18]
+df = pd.read_csv("data/Howell1.csv", sep=";")
+df2 = df[df["age"] >= 18]
 
-xbar = df2['weight'].mean()
-x = np.asarray(df2['weight'] - xbar)
+xbar = df2["weight"].mean()
+weight = np.asarray(df2["weight"])
 
 with pm.Model() as model:
-    a = pm.Normal('a', mu=178, sigma=20)
-    b = pm.Lognormal('b', mu=0, sigma=1)
-    sigma = pm.Uniform('sigma', 0, 50)
-    height = pm.Normal('height', mu=a + b * x, sigma=sigma, observed=df2['height'])
+    a = pm.Normal("a", mu=178, sigma=20)
+    b = pm.Lognormal("b", mu=0, sigma=1)
+    sigma = pm.Uniform("sigma", 0, 50)
+    height = pm.Normal(
+        "height", mu=a + b * (weight - xbar), sigma=sigma, observed=df2["height"]
+    )
     m43 = quap()
 ```
 
@@ -503,7 +548,17 @@ with pm.Model() as model:
 <!-- #endregion -->
 
 ```python tags=[]
-# TODO: Fails for me on current version of PyMC3
+with pm.Model() as model:
+    a = pm.Normal("a", mu=178, sigma=20)
+    log_b = pm.Normal("log_b", mu=0, sigma=1)
+    sigma = pm.Uniform("sigma", 0, 50)
+    height = pm.Normal(
+        "height",
+        mu=a + log_b.exp() * (weight - xbar),
+        sigma=sigma,
+        observed=df2["height"],
+    )
+    m43b = quap()
 ```
 
 <!-- #region tags=[] -->
@@ -527,15 +582,21 @@ np.round(m43.cov, 3)
 <!-- #endregion -->
 
 ```python tags=[]
-sns.scatterplot(data=df2, x='weight', y='height')
+ax = plot(data=df2, x="weight", y="height", plot_fn=sns.scatterplot)
 
-post = extract_samples(m43, n=10_000)
-a_map = post['a'].mean()
-b_map = post['b'].mean()
-
-xs = np.linspace(df2['weight'].min(), df2['weight'].max(), 100)
-sns.lineplot(x=xs, y=a_map + b_map * (xs - xbar), color='tab:orange', linewidth=2)
-plt.show()
+post = extract_samples(m43, n=10_000, random_state=random_state)
+a_map = post["a"].mean()
+b_map = post["b"].mean()
+ax = curve(
+    lambda x: a_map + b_map * (x - xbar),
+    start=df2["weight"].min(),
+    end=df2["weight"].max(),
+    xlabel="weight",
+    ylabel="height",
+    ax=ax,
+    color="tab:orange",
+    linewidth=2,
+)
 ```
 
 <!-- #region tags=[] -->
@@ -543,7 +604,7 @@ plt.show()
 <!-- #endregion -->
 
 ```python tags=[]
-post = extract_samples(m43, n=10_000)
+post = extract_samples(m43, n=10_000, random_state=random_state)
 post.head(5)
 ```
 
@@ -555,13 +616,13 @@ post.head(5)
 n = 10
 dfn = df2[:n]
 
-x = np.asarray(dfn['weight'] - dfn['weight'].mean())
+x = np.asarray(dfn["weight"] - dfn["weight"].mean())
 
 with pm.Model() as model:
-    a = pm.Normal('a', mu=178, sigma=20)
-    b = pm.Lognormal('b', mu=0, sigma=1)
-    sigma = pm.Uniform('sigma', 0, 50)
-    height = pm.Normal('height', mu=a + b * x, sigma=sigma, observed=dfn['height'])
+    a = pm.Normal("a", mu=178, sigma=20)
+    b = pm.Lognormal("b", mu=0, sigma=1)
+    sigma = pm.Uniform("sigma", 0, 50)
+    height = pm.Normal("height", mu=a + b * x, sigma=sigma, observed=dfn["height"])
     mn = quap()
 ```
 
@@ -570,12 +631,17 @@ with pm.Model() as model:
 <!-- #endregion -->
 
 ```python tags=[]
-post = extract_samples(mn, n=20)
-ax = plt.gca()
-sns.scatterplot(data=dfn, x='weight', y='height')
-ax.set(title=f'n = {n}')
+post = extract_samples(mn, n=20, random_state=random_state)
+ax = plot(data=dfn, x="weight", y="height", plot_fn=sns.scatterplot, title=f"n = {n}")
 for i in range(n):
-    sns.lineplot(x=xs, y=post['a'][i] + post['b'][i] * (xs - xbar), color='black', alpha=0.2)
+    plot(
+        x=xs,
+        y=post["a"][i] + post["b"][i] * (xs - xbar),
+        plot_fn=sns.lineplot,
+        ax=ax,
+        color="black",
+        alpha=0.2,
+    )
 ```
 
 <!-- #region tags=[] -->
@@ -583,8 +649,8 @@ for i in range(n):
 <!-- #endregion -->
 
 ```python tags=[]
-post = extract_samples(m43, n=100_000)
-mu_at_50 = post['a'] + post['b'] * (50 - xbar)
+post = extract_samples(m43, n=100_000, random_state=random_state)
+mu_at_50 = post["a"] + post["b"] * (50 - xbar)
 ```
 
 <!-- #region tags=[] -->
@@ -592,9 +658,7 @@ mu_at_50 = post['a'] + post['b'] * (50 - xbar)
 <!-- #endregion -->
 
 ```python tags=[]
-ax = az.plot_kde(mu_at_50)
-ax.set(xlabel='mu|weight=50', ylabel='density')
-plt.show()
+ax = dens(mu_at_50, xlabel="mu|weight=50")
 ```
 
 <!-- #region tags=[] -->
@@ -602,7 +666,7 @@ plt.show()
 <!-- #endregion -->
 
 ```python tags=[]
-mu_at_50.quantile((0.05, 0.94))
+pi(mu_at_50, prob=0.89)
 ```
 
 <!-- #region tags=[] -->
@@ -610,11 +674,9 @@ mu_at_50.quantile((0.05, 0.94))
 <!-- #endregion -->
 
 ```python tags=[]
-samples = extract_samples(m43, n=1_000)
-a = np.asarray(samples['a'])
-b = np.asarray(samples['b'])
-k = a + b * np.asarray((df2['weight'] - xbar)).reshape(-1,1)
-k.shape
+mu = link(
+    m43, {"mu": lambda df: df["a"] + df["b"] * (df["weight"] - xbar)}, df2[["weight"]]
+)
 ```
 
 <!-- #region tags=[] -->
@@ -622,12 +684,13 @@ k.shape
 <!-- #endregion -->
 
 ```python tags=[]
-samples = extract_samples(m43, n=1_000)
-a = np.asarray(samples['a'])
-b = np.asarray(samples['b'])
-x = np.linspace(25, 70, 46)
-mu = a + b * (x - xbar).reshape(-1,1)
-mu.shape
+weight_seq = np.linspace(25, 70, 46)
+mu = link(
+    m43,
+    {"mu": lambda df: df["a"] + df["b"] * (df["weight"] - xbar)},
+    pd.DataFrame({"weight": weight_seq}),
+)
+mu
 ```
 
 <!-- #region tags=[] -->
@@ -635,8 +698,16 @@ mu.shape
 <!-- #endregion -->
 
 ```python tags=[]
-for x_, row in zip(mu, k):
-    sns.scatterplot(x=x_*len(row), y=row, color='tab:blue', linewidth=0)
+ax = plot(
+    x="weight",
+    y="mu",
+    data=mu,
+    plot_fn=sns.scatterplot,
+    color="tab:orange",
+    linewidth=0.5,
+    alpha=0.3,
+)
+ax = sns.regplot(x="weight", y="height", data=df2, scatter=False, ax=ax, ci=None)
 ```
 
 <!-- #region tags=[] -->
@@ -644,8 +715,9 @@ for x_, row in zip(mu, k):
 <!-- #endregion -->
 
 ```python tags=[]
-mu_mean = mu.mean(axis=1)
-mu_quantile = np.quantile(mu, (0.05, 0.94), axis=1)
+mu_mean = mu.groupby("weight").mean()["mu"]
+mu_quantile = mu.groupby("weight").quantile([0.05, 0.94])["mu"].unstack()
+mu_quantile.columns = ["lower", "upper"]
 ```
 
 <!-- #region tags=[] -->
@@ -653,10 +725,9 @@ mu_quantile = np.quantile(mu, (0.05, 0.94), axis=1)
 <!-- #endregion -->
 
 ```python tags=[]
-sns.scatterplot(data=df2, x='weight', y='height')
-sns.lineplot(x=x, y=mu_mean, color='tab:red')
-plt.fill_between(x, mu_quantile[0], mu_quantile[1], alpha=0.2)
-plt.show()
+ax = plot(data=df2, x="weight", y="height", plot_fn=sns.scatterplot)
+plot(x=mu_mean.index, y=mu_mean.values, plot_fn=sns.lineplot, ax=ax, color="tab:red")
+p = plt.fill_between(weight_seq, mu_quantile["lower"], mu_quantile["upper"], alpha=0.2)
 ```
 
 <!-- #region tags=[] -->
@@ -665,12 +736,12 @@ plt.show()
 
 ```python tags=[]
 post = extract_samples(m43, n=10_000)
-a = np.asarray(post['a'])
-b = np.asarray(post['b'])
 weight_seq = np.linspace(25, 70, 46)
-mu = a + b * (x - xbar).reshape(-1,1)
-mu_mean = mu.mean(axis=1)
-mu_ci = np.quantile(mu, (0.05, 0.94), axis=1)
+df = post.merge(pd.DataFrame({"weight": weight_seq}), how="cross")
+df["mu"] = df["a"] + df["b"] * (df["weight"] - xbar)
+mu_mean = df.groupby("weight").mean()["mu"]
+mu_quantile = df.groupby("weight").quantile([0.05, 0.94])["mu"].unstack()
+mu_quantile.columns = ["lower", "upper"]
 ```
 
 <!-- #region tags=[] -->
@@ -678,52 +749,62 @@ mu_ci = np.quantile(mu, (0.05, 0.94), axis=1)
 <!-- #endregion -->
 
 ```python tags=[]
-samples = extract_samples(m43, n=1_000)
-a = np.asarray(samples['a'])
-b = np.asarray(samples['b'])
-x = np.linspace(25, 70, 46)
-mu = a + b * (x - xbar).reshape(-1,1)
-
-simulated_heights = []
-for m, s in zip(mu.T, samples['sigma']):
-    simulated_heights.append(stats.norm.rvs(m, s))
-    
-simulated_heights = np.asarray(simulated_heights)
-simulated_heights
+df = link(
+    m43,
+    {"mu": lambda df: df["a"] + df["b"] * (df["weight"] - xbar)},
+    pd.DataFrame({"weight": weight_seq}),
+)
+df["height"] = stats.norm.rvs(df["mu"], df["sigma"])
+df["height"]
 ```
 
 <!-- #region tags=[] -->
-### 4.60
+### 4.60 FIXME
 <!-- #endregion -->
 
 ```python tags=[]
-height_pi = np.quantile(simulated_heights, (0.05, 0.94), axis=0)
+# mu_quantile = df.groupby('weight').quantile([0.05, 0.94])['mu'].unstack()
+# mu_quantile.columns = ['lower', 'upper']
+
+mu_hpdi = df.groupby("weight").agg(lambda x: hdpi(np.asarray(x)))
+
+# height_pi = df.groupby('weight')['height'].quantile((0.05, 0.94)).unstack()
+# height_pi.columns = ['lower', 'upper']
 ```
 
 <!-- #region tags=[] -->
-### 4.61
+### 4.61 FIXME
 <!-- #endregion -->
 
 ```python tags=[]
-sns.scatterplot(data=df2, x='weight', y='height')
-sns.lineplot(x=x, y=mu_mean)
-plt.fill_between(x, mu_quantile[0], mu_quantile[1], alpha=0.2)
-plt.fill_between(x, height_pi[0], height_pi[1], alpha=0.2, color=['tab:green'])
-plt.show()
+# plot raw data
+ax = plot(data=df2, x="weight", y="height", plot_fn=sns.scatterplot, alpha=0.8)
+
+# draw MAP line
+plot(x=weight_seq, y=mu_mean, plot_fn=sns.lineplot, ax=ax, linewidth=2, color="tab:red")
+
+# draw HDPI region for line
+plt.fill_between(
+    weight_seq, mu_quantile["lower"], mu_quantile["upper"], alpha=0.2, color=["tab:red"]
+)
+
+# draw PI region for simulated heights
+p = plt.fill_between(
+    weight_seq, height_pi["lower"], height_pi["upper"], alpha=0.2, color=["gray"]
+)
 ```
 
 <!-- #region tags=[] -->
-### 4.62
+### 4.62 FIXME
 <!-- #endregion -->
 
 ```python tags=[]
-data = pd.DataFrame({'weight': np.linspace(25, 70, 46)})
-sim_height = sim(m43, lambda df: df['a'] + df['b']*(df['weight'] - xbar), data)
-pi = sim_height.groupby('weight').quantile([0.05, 0.94]).unstack()
+data = pd.DataFrame({"weight": np.linspace(25, 70, 46)})
+sim_height = sim(m43, lambda df: df["a"] + df["b"] * (df["weight"] - xbar), data)
+pi = sim_height.groupby("weight").quantile([0.05, 0.94]).unstack()
 pi.columns = ["low", "high"]
 
-plt.fill_between(pi.index, pi["low"], pi["high"], alpha=0.2, color=['tab:green'])
-
+plt.fill_between(pi.index, pi["low"], pi["high"], alpha=0.2, color=["tab:green"])
 ```
 
 ```python
@@ -735,18 +816,17 @@ sim_height = sim
 <!-- #endregion -->
 
 ```python tags=[]
-samples = extract_samples(m43, n=10_000)
-a = np.asarray(samples['a'])
-b = np.asarray(samples['b'])
-x = np.linspace(25, 70, 46).reshape(-1, 1)
-mu = a + b * (x - xbar)
+# we don't have `sim` in "unthinking", so this is just a repeat of 4.59 and 4.60
 
-simulated_heights = []
-for m, s in zip(mu.T, samples['sigma']):
-    simulated_heights.append(stats.norm.rvs(m, s))
-    
-simulated_heights = np.asarray(simulated_heights)
-height_pi = np.quantile(simulated_heights, (0.05, 0.94), axis=0)
+df = link(
+    m43,
+    {"mu": lambda df: df["a"] + df["b"] * (df["weight"] - xbar)},
+    pd.DataFrame({"weight": weight_seq}),
+)
+df["height"] = stats.norm.rvs(df["mu"], df["sigma"])
+
+height_pi = df.groupby("weight")["height"].quantile((0.05, 0.94)).unstack()
+height_pi.columns = ["lower", "upper"]
 ```
 
 <!-- #region tags=[] -->
@@ -754,7 +834,7 @@ height_pi = np.quantile(simulated_heights, (0.05, 0.94), axis=0)
 <!-- #endregion -->
 
 ```python tags=[]
-
+df = pd.read_csv("data/Howell1.csv", sep=";")
 ```
 
 <!-- #region tags=[] -->
@@ -762,7 +842,21 @@ height_pi = np.quantile(simulated_heights, (0.05, 0.94), axis=0)
 <!-- #endregion -->
 
 ```python tags=[]
+weight_s = (df["weight"] - df["weight"].mean()) / df["weight"].std()
+weight_s2 = weight_s ** 2
 
+with pm.Model() as model:
+    a = pm.Normal("a", mu=178, sigma=20)
+    b1 = pm.Lognormal("b1", mu=0, sigma=1)
+    b2 = pm.Normal("b2", mu=0, sigma=1)
+    sigma = pm.Uniform("sigma", 0, 50)
+    height = pm.Normal(
+        "height",
+        mu=a + b1 * weight_s + b2 * weight_s2,
+        sigma=sigma,
+        observed=df["height"],
+    )
+    m45 = quap()
 ```
 
 <!-- #region tags=[] -->
@@ -770,7 +864,7 @@ height_pi = np.quantile(simulated_heights, (0.05, 0.94), axis=0)
 <!-- #endregion -->
 
 ```python tags=[]
-
+precis(m45)
 ```
 
 <!-- #region tags=[] -->
@@ -778,7 +872,17 @@ height_pi = np.quantile(simulated_heights, (0.05, 0.94), axis=0)
 <!-- #endregion -->
 
 ```python tags=[]
+weight_seq = np.linspace(-2.2, 2, 30)
+pred_df = pd.DataFrame({"weight_s": weight_seq, "weight_s2": weight_seq**2})
+df = link(m45, {'mu': lambda df: df['a'] + df['b1'] * df['weight_s'] + df['b2'] * df['weight_s2']}, pred_df)
 
+mu_mean = df.groupby('weight_s')['mu'].mean()
+mu_pi = df.groupby("weight_s").quantile([0.05, 0.94])["mu"].unstack()
+mu_pi.columns = ["lower", "upper"]
+
+df["sim_height"] = stats.norm.rvs(df["mu"], df["sigma"])
+height_pi = df.groupby('weight_s').quantile([0.05, 0.94])["sim_height"].unstack()
+height_pi.columns = ["lower", "upper"]
 ```
 
 <!-- #region tags=[] -->
@@ -826,26 +930,7 @@ height_pi = np.quantile(simulated_heights, (0.05, 0.94), axis=0)
 <!-- #endregion -->
 
 ```python tags=[]
-df = pd.read_csv('data/Howell1.csv',sep=';')
-df2 = df[df['age'] >= 18]
 
-xbar = df2['weight'].mean()
-x = np.asarray(df2['weight'] - xbar)
-
-with pm.Model() as model:
-    a = pm.Normal('a', mu=178, sigma=20)
-    b = pm.Lognormal('b', mu=0, sigma=1)
-    sigma = pm.Uniform('sigma', 0, 50)
-    height = pm.Normal('height', mu=a + b * x, sigma=sigma, observed=df2['height'])
-    m43 = quap()
-```
-
-```python tags=[]
-x = model.observed_RVs.copy().pop()
-```
-
-```python tags=[]
-dir(x)
 ```
 
 <!-- #region tags=[] -->
@@ -934,8 +1019,7 @@ n = 10_000
 mus = stats.norm.rvs(0, 10, n)
 sigmas = stats.expon.rvs(size=n)
 samples = stats.norm.rvs(loc=mus, scale=sigmas)
-sns.histplot(samples)
-plt.show()
+ax = dens(samples, xlabel="y", title="prior predictive distribution")
 ```
 
 <!-- #region tags=[] -->
@@ -946,10 +1030,10 @@ plt.show()
 fake_data = stats.norm.rvs(size=500)
 
 with pm.Model() as model:
-    mu = pm.Normal('mu', mu=0, sigma=10)
-    sigma = pm.Exponential('sigma', lam=1)
-    y = pm.Normal('y', mu=mu, sigma=sigma, observed=fake_data)
-    result = quap(model, vars=[mu, sigma])
+    mu = pm.Normal("mu", mu=0, sigma=10)
+    sigma = pm.Exponential("sigma", lam=1)
+    y = pm.Normal("y", mu=mu, sigma=sigma, observed=fake_data)
+    result = quap()
 ```
 
 <!-- #region tags=[] -->
@@ -993,18 +1077,18 @@ That means we can replace our prior on $\sigma$ with $\text{Uniform}(0, 63)$.
 <!-- #endregion -->
 
 ```python tags=[]
-df = pd.read_csv('data/Howell1.csv',sep=';')
-df2 = df[df['age'] >= 18]
+df = pd.read_csv("data/Howell1.csv", sep=";")
+df2 = df[df["age"] >= 18]
 
-x = np.asarray(df2['weight'])
+x = np.asarray(df2["weight"])
 
 with pm.Model() as model:
-    a = pm.Normal('a', mu=178, sigma=20)
-    b = pm.Lognormal('b', mu=0, sigma=1)
-    sigma = pm.Uniform('sigma', 0, 50)
-    height = pm.Normal('height', mu=a + b * x, sigma=sigma, observed=df2['height'])
-    m_uncentered = quap(model, vars=[a, b, sigma])
-    
+    a = pm.Normal("a", mu=178, sigma=20)
+    b = pm.Lognormal("b", mu=0, sigma=1)
+    sigma = pm.Uniform("sigma", 0, 50)
+    height = pm.Normal("height", mu=a + b * x, sigma=sigma, observed=df2["height"])
+    m_uncentered = quap()
+
 
 uncentered_samples = extract_samples(m_uncentered, n=10_000)
 m_uncentered.cov
@@ -1014,16 +1098,16 @@ m_uncentered.cov
 m43_samples = extract_samples(m43, n=10_000)
 
 weight_seq = np.linspace(35, 70, 46)
-a = np.asarray(m43_samples['a'])
-b = np.asarray(m43_samples['b'])
+a = np.asarray(m43_samples["a"])
+b = np.asarray(m43_samples["b"])
 
-xbar = df2['weight'].mean()
+xbar = df2["weight"].mean()
 
 m43_best_fit = (a + b * (weight_seq - xbar).reshape(-1, 1)).mean(axis=1)
 
 
-a = np.asarray(uncentered_samples['a'])
-b = np.asarray(uncentered_samples['b'])
+a = np.asarray(uncentered_samples["a"])
+b = np.asarray(uncentered_samples["b"])
 uncentered_best_fit = (a + b * weight_seq.reshape(-1, 1)).mean(axis=1)
 
 sns.lineplot(x=weight_seq, y=m43_best_fit)

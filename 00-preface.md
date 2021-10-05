@@ -16,7 +16,6 @@ jupyter:
 # Preface
 
 ```python
-%%capture
 import numpy as np
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
@@ -28,7 +27,7 @@ import matplotlib.pyplot as plt
 ### 0.1
 
 ```python
-print('All models are wrong, but some are useful.')
+print("All models are wrong, but some are useful.")
 ```
 
 ### 0.2
@@ -45,7 +44,7 @@ x
 ### 0.3
 
 ```python
-np.log(0.01**200), 200 * np.log(0.01)
+np.log(0.01 ** 200), 200 * np.log(0.01)
 ```
 
 ### 0.4
@@ -55,7 +54,7 @@ from statsmodels.formula.api import ols
 
 # Load the data:
 # car braking distances in feet paired with speeds in km/h
-cars = sm.datasets.get_rdataset('cars').data
+cars = sm.datasets.get_rdataset("cars").data
 
 # fit a linear regression of distance on speed
 cars_model = ols("dist ~ speed", data=cars).fit()
@@ -65,15 +64,15 @@ print(cars_model.params)
 
 # plot residuals against speed
 ax = plt.gca()
-ax.plot(cars['dist'], cars_model.resid, 'o')
-ax.axhline(y=0, color='black')
-ax.set(xlabel='speed', ylabel='residual')
-ax.set_title('Residuals versus speed', fontsize='large')
-plt.show()
+ax.plot(cars["dist"], cars_model.resid, "o")
+ax.axhline(y=0, color="black")
+ax.set(xlabel="speed", ylabel="residual")
+ax.set_title("Residuals versus speed", fontsize="large")
+pass
 ```
 
 ### 0.5
 
 ```python
-# this is an R specific requirement
+# This is an R specific requirement---we use "unthinking" instead, and it is packaged together with this notebook.
 ```

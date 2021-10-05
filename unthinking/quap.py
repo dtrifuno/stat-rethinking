@@ -57,9 +57,9 @@ def extract_samples(result, n, random_state=None):
     return pd.DataFrame(as_dict)
 
 
-def link(result, fn, data, n=10_000, random_state=None):
+def link(result, fn_dict, data, n=10_000, random_state=None):
     params = extract_samples(result, n, random_state=random_state)
     df = params.merge(data, how="cross")
-    df["samples"] = fn(df)
-    df = df.drop(params.columns, axis=1)
+    for fn_name, fn in fn_dict.items():
+        df[fn_name] = fn(df)
     return df
